@@ -26,6 +26,14 @@ A lightweight, no-fuss desktop app for planning raised-bed vegetable gardens usi
 
 ---
 
+## Screenshots
+
+![growNodes Garden Planner - empty bed](https://github.com/user-attachments/assets/899979c9-5525-42a5-bc41-d80203c8c934)
+
+![growNodes Garden Planner - planted layout](https://github.com/user-attachments/assets/144e8f65-7e38-4bce-b3ae-e6d4f457959c)
+
+---
+
 ## Requirements
 
 - **Python 3.x** (3.8 or newer recommended)
