@@ -10,26 +10,56 @@ from tkinter import filedialog, messagebox, ttk
 # ─── Crop Database ────────────────────────────────────────────────────────────
 
 CROP_DATA = {
-    "Tomatoes":  {"plants_per_sqft": 1,  "color": "#E74C3C", "spacing": "18–24 in"},
-    "Peppers":   {"plants_per_sqft": 1,  "color": "#E67E22", "spacing": "12–15 in"},
-    "Lettuce":   {"plants_per_sqft": 4,  "color": "#A8E063", "spacing": "6 in"},
-    "Spinach":   {"plants_per_sqft": 9,  "color": "#27AE60", "spacing": "4 in"},
-    "Carrots":   {"plants_per_sqft": 16, "color": "#F39C12", "spacing": "3 in"},
-    "Radishes":  {"plants_per_sqft": 16, "color": "#E91E8C", "spacing": "3 in"},
-    "Beans":     {"plants_per_sqft": 9,  "color": "#8BC34A", "spacing": "4 in"},
-    "Basil":     {"plants_per_sqft": 4,  "color": "#1ABC9C", "spacing": "6 in"},
-    "Cucumbers": {"plants_per_sqft": 2,  "color": "#48C9B0", "spacing": "8 in"},
-    "Zucchini":  {"plants_per_sqft": 1,  "color": "#F1C40F", "spacing": "18 in"},
-    "Kale":      {"plants_per_sqft": 1,  "color": "#1E8449", "spacing": "12 in"},
-    "Onions":    {"plants_per_sqft": 16, "color": "#BB8FCE", "spacing": "3 in"},
-    "Peas":      {"plants_per_sqft": 8,  "color": "#A9DFBF", "spacing": "4–6 in"},
+    # ── Original crops ────────────────────────────────────────────────────────
+    "Tomatoes":         {"plants_per_sqft": 1,  "color": "#E74C3C", "spacing": "18–24 in", "icon": "🍅"},
+    "Peppers":          {"plants_per_sqft": 1,  "color": "#E67E22", "spacing": "12–15 in", "icon": "🌶️"},
+    "Lettuce":          {"plants_per_sqft": 4,  "color": "#A8E063", "spacing": "6 in",     "icon": "🥬"},
+    "Spinach":          {"plants_per_sqft": 9,  "color": "#27AE60", "spacing": "4 in",     "icon": "🍃"},
+    "Carrots":          {"plants_per_sqft": 16, "color": "#F39C12", "spacing": "3 in",     "icon": "🥕"},
+    "Radishes":         {"plants_per_sqft": 16, "color": "#E91E8C", "spacing": "3 in",     "icon": "🌸"},
+    "Beans":            {"plants_per_sqft": 9,  "color": "#8BC34A", "spacing": "4 in",     "icon": "🫘"},
+    "Basil":            {"plants_per_sqft": 4,  "color": "#1ABC9C", "spacing": "6 in",     "icon": "🌿"},
+    "Cucumbers":        {"plants_per_sqft": 2,  "color": "#48C9B0", "spacing": "8 in",     "icon": "🥒"},
+    "Zucchini":         {"plants_per_sqft": 1,  "color": "#F1C40F", "spacing": "18 in",    "icon": "🟢"},
+    "Kale":             {"plants_per_sqft": 1,  "color": "#1E8449", "spacing": "12 in",    "icon": "🌱"},
+    "Onions":           {"plants_per_sqft": 16, "color": "#BB8FCE", "spacing": "3 in",     "icon": "🧅"},
+    "Peas":             {"plants_per_sqft": 8,  "color": "#A9DFBF", "spacing": "4–6 in",  "icon": "🫛"},
+    # ── New crops ─────────────────────────────────────────────────────────────
+    "Broccoli":         {"plants_per_sqft": 1,  "color": "#2E86AB", "spacing": "12 in",    "icon": "🥦"},
+    "Cauliflower":      {"plants_per_sqft": 1,  "color": "#D5D8DC", "spacing": "12 in",    "icon": "⚪"},
+    "Cabbage":          {"plants_per_sqft": 1,  "color": "#7DCEA0", "spacing": "12 in",    "icon": "💚"},
+    "Brussels Sprouts": {"plants_per_sqft": 1,  "color": "#52BE80", "spacing": "12 in",    "icon": "🥦"},
+    "Sweet Corn":       {"plants_per_sqft": 4,  "color": "#F9E79F", "spacing": "6 in",     "icon": "🌽"},
+    "Pumpkin":          {"plants_per_sqft": 1,  "color": "#DC7633", "spacing": "24–36 in", "icon": "🎃"},
+    "Watermelon":       {"plants_per_sqft": 1,  "color": "#EC407A", "spacing": "18–24 in", "icon": "🍉"},
+    "Cantaloupe":       {"plants_per_sqft": 1,  "color": "#FFAB76", "spacing": "18–24 in", "icon": "🍈"},
+    "Eggplant":         {"plants_per_sqft": 1,  "color": "#7B2D8B", "spacing": "18 in",    "icon": "🍆"},
+    "Sweet Potatoes":   {"plants_per_sqft": 4,  "color": "#B7770D", "spacing": "6 in",     "icon": "🍠"},
+    "Garlic":           {"plants_per_sqft": 16, "color": "#F0E6D3", "spacing": "3 in",     "icon": "🧄"},
+    "Leeks":            {"plants_per_sqft": 9,  "color": "#82E0AA", "spacing": "4 in",     "icon": "🌾"},
+    "Beets":            {"plants_per_sqft": 9,  "color": "#8E44AD", "spacing": "4 in",     "icon": "🔴"},
+    "Swiss Chard":      {"plants_per_sqft": 4,  "color": "#D98880", "spacing": "6 in",     "icon": "🍀"},
+    "Arugula":          {"plants_per_sqft": 4,  "color": "#A9CCE3", "spacing": "6 in",     "icon": "🥗"},
+    "Cilantro":         {"plants_per_sqft": 9,  "color": "#58D68D", "spacing": "4 in",     "icon": "🌿"},
+    "Parsley":          {"plants_per_sqft": 4,  "color": "#17A589", "spacing": "6 in",     "icon": "🪴"},
+    "Dill":             {"plants_per_sqft": 4,  "color": "#ABEBC6", "spacing": "6 in",     "icon": "🌼"},
+    "Sunflowers":       {"plants_per_sqft": 1,  "color": "#F4D03F", "spacing": "12 in",    "icon": "🌻"},
+    "Strawberries":     {"plants_per_sqft": 4,  "color": "#CB4335", "spacing": "6 in",     "icon": "🍓"},
 }
 
 EMPTY_COLOR     = "#E8DCC8"
 GRID_LINE_COLOR = "#7D6B4F"
 HOVER_COLOR     = "#FFD700"
-CELL_SIZE       = 80   # pixels per square foot
+CELL_SIZE       = 100  # pixels per square foot
 PAD             = 30   # canvas edge padding
+
+
+def _text_color(hex_color):
+    """Return '#000000' or '#ffffff' for best readability on hex_color."""
+    h = hex_color.lstrip("#")
+    r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+    brightness = 0.2126 * r + 0.7152 * g + 0.0722 * b
+    return "#000000" if brightness > 128 else "#ffffff"
 
 
 # ─── Main Application ─────────────────────────────────────────────────────────
@@ -42,7 +72,10 @@ class GardenPlannerApp:
 
         self.rows = 4
         self.cols = 8
-        self.grid_data = {}        # (row, col) -> crop name or None
+        self.grid_data  = {}   # (row, col) -> crop name or None
+        self.notes      = {}   # (row, col) -> str
+        self.irrigation = {}   # (row, col) -> "drip" | "spray"
+        self.soil       = {}   # (row, col) -> "composted" | "fertilized" | "needs_compost" | "needs_fertilizer"
         self.current_file = None
         self.hovered_cell = None
         self.selected_crop = tk.StringVar(value="Tomatoes")
@@ -111,10 +144,11 @@ class GardenPlannerApp:
         v_bar.pack(side=tk.RIGHT,  fill=tk.Y)
         self.canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-        self.canvas.bind("<Button-1>", self._on_click)
-        self.canvas.bind("<Button-3>", self._on_right_click)
-        self.canvas.bind("<Motion>",   self._on_hover)
-        self.canvas.bind("<Leave>",    lambda e: self._clear_hover())
+        self.canvas.bind("<Button-1>",        self._on_click)
+        self.canvas.bind("<Double-Button-1>", self._on_double_click)
+        self.canvas.bind("<Button-3>",        self._on_right_click)
+        self.canvas.bind("<Motion>",          self._on_hover)
+        self.canvas.bind("<Leave>",           lambda e: self._clear_hover())
 
         # Crop selector bar
         sel = tk.Frame(left, bg="#2D5016", pady=8)
@@ -128,7 +162,7 @@ class GardenPlannerApp:
         self.crop_cb = ttk.Combobox(
             sel, textvariable=self.selected_crop,
             values=list(CROP_DATA.keys()),
-            state="readonly", width=13,
+            state="readonly", width=16,
             font=("Helvetica", 11),
         )
         self.crop_cb.pack(side=tk.LEFT)
@@ -140,7 +174,7 @@ class GardenPlannerApp:
         self.info_lbl.pack(side=tk.LEFT)
 
         tk.Label(
-            sel, text="Left-click = plant  ·  Right-click = clear",
+            sel, text="Left-click = plant  ·  Double-click = note  ·  Right-click = menu",
             bg="#2D5016", fg="#7CB87C", font=("Helvetica", 9),
         ).pack(side=tk.RIGHT, padx=6)
 
@@ -240,22 +274,61 @@ class GardenPlannerApp:
                     tags="cell",
                 )
 
+                txt = _text_color(color)
+                cx, cy = x1 + SZ // 2, y1 + SZ // 2
                 if crop:
+                    icon  = CROP_DATA[crop]["icon"]
                     n     = CROP_DATA[crop]["plants_per_sqft"]
-                    label = crop if len(crop) <= 7 else crop[:6] + "."
-                    cx, cy = x1 + SZ // 2, y1 + SZ // 2
+                    label = crop if len(crop) <= 10 else crop[:9] + "."
+                    # Emoji icon (top area)
                     self.canvas.create_text(
-                        cx, cy - 8, text=label,
-                        font=("Helvetica", 8, "bold"), fill="#111111",
+                        cx, cy - 22, text=icon,
+                        font=("Segoe UI Emoji", 14), fill=txt,
                     )
+                    # Crop name (centre)
                     self.canvas.create_text(
-                        cx, cy + 8, text=f"× {n}",
-                        font=("Helvetica", 8), fill="#333333",
+                        cx, cy - 2, text=label,
+                        font=("Helvetica", 8, "bold"), fill=txt,
+                    )
+                    # Plant count (below centre)
+                    self.canvas.create_text(
+                        cx, cy + 14, text=f"× {n}",
+                        font=("Helvetica", 8), fill=txt,
                     )
                 else:
                     self.canvas.create_text(
-                        x1 + 5, y1 + 4, text=f"{r+1},{c+1}",
-                        font=("Helvetica", 6), fill="#B0A090", anchor="nw",
+                        x1 + 5, y1 + 5, text=f"{r+1},{c+1}",
+                        font=("Helvetica", 6), fill=txt, anchor="nw",
+                    )
+
+                # Note indicator — top-right corner
+                if (r, c) in self.notes:
+                    self.canvas.create_text(
+                        x2 - 4, y1 + 4, text="📝",
+                        font=("Segoe UI Emoji", 9), fill=txt, anchor="ne",
+                    )
+
+                # Irrigation indicator — bottom-left corner
+                irr_icons  = {"drip": "💧", "spray": "🌧️"}
+                irr = self.irrigation.get((r, c))
+                if irr in irr_icons:
+                    self.canvas.create_text(
+                        x1 + 4, y2 - 4, text=irr_icons[irr],
+                        font=("Segoe UI Emoji", 9), fill=txt, anchor="sw",
+                    )
+
+                # Soil indicator — bottom-right corner
+                soil_icons = {
+                    "composted":        "♻️",
+                    "fertilized":       "⚡",
+                    "needs_compost":    "🟤",
+                    "needs_fertilizer": "⚠️",
+                }
+                soil = self.soil.get((r, c))
+                if soil in soil_icons:
+                    self.canvas.create_text(
+                        x2 - 4, y2 - 4, text=soil_icons[soil],
+                        font=("Segoe UI Emoji", 9), fill=txt, anchor="se",
                     )
 
         # Row numbers (left)
@@ -295,13 +368,55 @@ class GardenPlannerApp:
             self._draw_grid()
             self._update_sidebar()
 
-    def _on_right_click(self, event):
+    def _on_double_click(self, event):
         cell = self._cell_from_event(event)
         if cell:
             r, c = cell
-            self.grid_data[(r, c)] = None
-            self._draw_grid()
-            self._update_sidebar()
+            _NoteDialog(self.root, r, c, self.notes, self._draw_grid)
+
+    def _on_right_click(self, event):
+        cell = self._cell_from_event(event)
+        if not cell:
+            return
+        r, c = cell
+
+        menu = tk.Menu(self.root, tearoff=0)
+        menu.add_command(label="Clear Square", command=lambda: self._clear_square(r, c))
+
+        irr_menu = tk.Menu(menu, tearoff=0)
+        irr_menu.add_command(label="None",     command=lambda: self._set_irrigation(r, c, None))
+        irr_menu.add_command(label="💧 Drip",  command=lambda: self._set_irrigation(r, c, "drip"))
+        irr_menu.add_command(label="🌧️ Spray", command=lambda: self._set_irrigation(r, c, "spray"))
+        menu.add_cascade(label="Set Irrigation", menu=irr_menu)
+
+        soil_menu = tk.Menu(menu, tearoff=0)
+        soil_menu.add_command(label="None",                command=lambda: self._set_soil(r, c, None))
+        soil_menu.add_command(label="♻️ Composted",        command=lambda: self._set_soil(r, c, "composted"))
+        soil_menu.add_command(label="⚡ Fertilized",       command=lambda: self._set_soil(r, c, "fertilized"))
+        soil_menu.add_command(label="🟤 Needs Compost",   command=lambda: self._set_soil(r, c, "needs_compost"))
+        soil_menu.add_command(label="⚠️ Needs Fertilizer", command=lambda: self._set_soil(r, c, "needs_fertilizer"))
+        menu.add_cascade(label="Set Soil", menu=soil_menu)
+
+        menu.tk_popup(event.x_root, event.y_root)
+
+    def _clear_square(self, r, c):
+        self.grid_data[(r, c)] = None
+        self._draw_grid()
+        self._update_sidebar()
+
+    def _set_irrigation(self, r, c, value):
+        if value is None:
+            self.irrigation.pop((r, c), None)
+        else:
+            self.irrigation[(r, c)] = value
+        self._draw_grid()
+
+    def _set_soil(self, r, c, value):
+        if value is None:
+            self.soil.pop((r, c), None)
+        else:
+            self.soil[(r, c)] = value
+        self._draw_grid()
 
     def _on_hover(self, event):
         cell = self._cell_from_event(event)
@@ -390,8 +505,8 @@ class GardenPlannerApp:
                     font=("Helvetica", 8),
                 ).pack(side=tk.RIGHT)
 
-        # Stats footer
-        total_sq   = self.rows * self.cols
+        # Stats footer — total_sq counts only active plantable squares
+        total_sq   = len(self.grid_data)
         planted_sq = sum(1 for v in self.grid_data.values() if v)
         total_pl   = sum(
             CROP_DATA[v]["plants_per_sqft"]
@@ -415,6 +530,9 @@ class GardenPlannerApp:
         ):
             self.current_file = None
             self.rows, self.cols = 4, 8
+            self.notes      = {}
+            self.irrigation = {}
+            self.soil       = {}
             self._init_grid()
             self._draw_grid()
             self._update_sidebar()
@@ -431,6 +549,9 @@ class GardenPlannerApp:
             for (r, c), crop in old.items():
                 if r < nr and c < nc and crop:
                     self.grid_data[(r, c)] = crop
+            self.notes      = {(r, c): v for (r, c), v in self.notes.items()      if r < nr and c < nc}
+            self.irrigation = {(r, c): v for (r, c), v in self.irrigation.items() if r < nr and c < nc}
+            self.soil       = {(r, c): v for (r, c), v in self.soil.items()       if r < nr and c < nc}
             self._draw_grid()
             self._update_sidebar()
 
@@ -438,6 +559,9 @@ class GardenPlannerApp:
         if messagebox.askyesno("Clear All", "Remove all crops from the garden?"):
             for key in self.grid_data:
                 self.grid_data[key] = None
+            self.notes      = {}
+            self.irrigation = {}
+            self.soil       = {}
             self._draw_grid()
             self._update_sidebar()
 
@@ -468,6 +592,9 @@ class GardenPlannerApp:
                 for (r, c), crop in self.grid_data.items()
                 if crop
             },
+            "notes":      {f"{r},{c}": note for (r, c), note in self.notes.items()},
+            "irrigation": {f"{r},{c}": val  for (r, c), val  in self.irrigation.items()},
+            "soil":       {f"{r},{c}": val  for (r, c), val  in self.soil.items()},
         }
         try:
             with open(path, "w", encoding="utf-8") as f:
@@ -494,6 +621,21 @@ class GardenPlannerApp:
                 r, c = map(int, key.split(","))
                 if (r, c) in self.grid_data and crop in CROP_DATA:
                     self.grid_data[(r, c)] = crop
+            self.notes = {}
+            for key, note in data.get("notes", {}).items():
+                r, c = map(int, key.split(","))
+                if 0 <= r < self.rows and 0 <= c < self.cols:
+                    self.notes[(r, c)] = note
+            self.irrigation = {}
+            for key, val in data.get("irrigation", {}).items():
+                r, c = map(int, key.split(","))
+                if 0 <= r < self.rows and 0 <= c < self.cols:
+                    self.irrigation[(r, c)] = val
+            self.soil = {}
+            for key, val in data.get("soil", {}).items():
+                r, c = map(int, key.split(","))
+                if 0 <= r < self.rows and 0 <= c < self.cols:
+                    self.soil[(r, c)] = val
             self.current_file = path
             self._draw_grid()
             self._update_sidebar()
@@ -501,6 +643,57 @@ class GardenPlannerApp:
             self.status_var.set(f"Loaded: {path}")
         except (OSError, ValueError, KeyError) as e:
             messagebox.showerror("Load Error", str(e))
+
+
+# ─── Note Dialog ──────────────────────────────────────────────────────────────
+
+class _NoteDialog:
+    def __init__(self, parent, row, col, notes, refresh_cb):
+        self.notes      = notes
+        self.key        = (row, col)
+        self.refresh_cb = refresh_cb
+
+        self.top = tk.Toplevel(parent)
+        self.top.title(f"Note — Row {row+1}, Col {col+1}")
+        self.top.resizable(False, False)
+        self.top.grab_set()
+        self.top.configure(bg="#2D5016")
+
+        tk.Label(
+            self.top,
+            text=f"Note for square ({row+1}, {col+1}):",
+            bg="#2D5016", fg="#F5F5DC",
+            font=("Helvetica", 10),
+        ).pack(padx=16, pady=(12, 4), anchor="w")
+
+        self.text_widget = tk.Text(
+            self.top, width=32, height=4,
+            font=("Helvetica", 10), wrap="word",
+        )
+        self.text_widget.pack(padx=16, pady=4)
+        existing = notes.get(self.key, "")
+        if existing:
+            self.text_widget.insert("1.0", existing)
+
+        btns = tk.Frame(self.top, bg="#2D5016")
+        btns.pack(pady=(4, 12))
+        ttk.Button(btns, text="Save",       command=self._save ).pack(side=tk.LEFT, padx=6)
+        ttk.Button(btns, text="Clear Note", command=self._clear).pack(side=tk.LEFT, padx=6)
+        ttk.Button(btns, text="Cancel",     command=self.top.destroy).pack(side=tk.LEFT, padx=6)
+
+    def _save(self):
+        note = self.text_widget.get("1.0", "end-1c").strip()
+        if note:
+            self.notes[self.key] = note
+        else:
+            self.notes.pop(self.key, None)
+        self.refresh_cb()
+        self.top.destroy()
+
+    def _clear(self):
+        self.notes.pop(self.key, None)
+        self.refresh_cb()
+        self.top.destroy()
 
 
 # ─── Resize Dialog ────────────────────────────────────────────────────────────
@@ -557,7 +750,7 @@ class _ResizeDialog:
 
 if __name__ == "__main__":
     root = tk.Tk()
-    root.geometry("1160x730")
-    root.minsize(920, 560)
+    root.geometry("1280x760")
+    root.minsize(1060, 600)
     GardenPlannerApp(root)
     root.mainloop()
