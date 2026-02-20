@@ -47,6 +47,18 @@ CROP_DATA = {
     "Strawberries":     {"plants_per_sqft": 4,  "color": "#CB4335", "spacing": "6 in",     "icon": "🍓"},
 }
 
+SURFACE_DATA = {
+    "garden":  {"color": None,      "icon": ""},     # uses EMPTY_COLOR when no crop
+    "grass":   {"color": "#7EC850", "icon": "🌱"},
+    "pathway": {"color": "#A0856B", "icon": "🧱"},
+    "gravel":  {"color": "#B0B0B0", "icon": "⬡"},
+    "mulch":   {"color": "#5C3A1E", "icon": "🪵"},
+    "water":   {"color": "#5DADE2", "icon": "💧"},
+    "unused":  {"color": "#E8E8E8", "icon": ""},
+}
+
+SURFACE_ORDER = ["garden", "grass", "pathway", "gravel", "mulch", "water", "unused"]
+
 EMPTY_COLOR     = "#E8DCC8"
 GRID_LINE_COLOR = "#7D6B4F"
 HOVER_COLOR     = "#FFD700"
@@ -72,10 +84,11 @@ class GardenPlannerApp:
 
         self.rows = 4
         self.cols = 8
-        self.grid_data  = {}   # (row, col) -> crop name or None
-        self.notes      = {}   # (row, col) -> str
-        self.irrigation = {}   # (row, col) -> "drip" | "spray"
-        self.soil       = {}   # (row, col) -> "composted" | "fertilized" | "needs_compost" | "needs_fertilizer"
+        self.grid_data      = {}    # (row, col) -> crop name or None
+        self.notes          = {}    # (row, col) -> str
+        self.irrigation     = {}    # (row, col) -> "drip" | "spray"
+        self.soil           = {}    # (row, col) -> soil amendment key
+        self.cell_types     = {}    # (row, col) -> surface string; absent = "garden"
         self.current_file = None
         self.hovered_cell = None
         self.selected_crop = tk.StringVar(value="Tomatoes")
@@ -101,7 +114,7 @@ class GardenPlannerApp:
         menubar.add_cascade(label="File", menu=file_menu)
 
         garden_menu = tk.Menu(menubar, tearoff=0)
-        garden_menu.add_command(label="Resize Garden Bed…", command=self._resize_garden)
+        garden_menu.add_command(label="Edit Garden Layout…", command=self._resize_garden)
         garden_menu.add_command(label="Clear All Squares",   command=self._clear_all)
         menubar.add_cascade(label="Garden", menu=garden_menu)
 
@@ -240,7 +253,14 @@ class GardenPlannerApp:
             (r, c): None
             for r in range(self.rows)
             for c in range(self.cols)
+            if self.cell_types.get((r, c), "garden") == "garden"
         }
+
+    def _is_garden(self, r, c):
+        """True if (r, c) is inside the grid and has surface type 'garden'."""
+        if not (0 <= r < self.rows and 0 <= c < self.cols):
+            return False
+        return self.cell_types.get((r, c), "garden") == "garden"
 
     def _draw_grid(self):
         self.canvas.delete("all")
@@ -250,86 +270,119 @@ class GardenPlannerApp:
         total_h = self.rows * SZ + PAD * 2
         self.canvas.configure(scrollregion=(0, 0, total_w, total_h))
 
-        # Raised-bed border
-        self.canvas.create_rectangle(
-            PAD - 8, PAD - 8,
-            PAD + self.cols * SZ + 8,
-            PAD + self.rows * SZ + 8,
-            fill="#3E2107", outline="#1F0F03", width=5,
-        )
-
         # Draw each cell
         for r in range(self.rows):
             for c in range(self.cols):
-                crop  = self.grid_data.get((r, c))
-                color = CROP_DATA[crop]["color"] if crop else EMPTY_COLOR
+                surface = self.cell_types.get((r, c), "garden")
                 x1 = PAD + c * SZ
                 y1 = PAD + r * SZ
                 x2 = x1 + SZ
                 y2 = y1 + SZ
 
-                self.canvas.create_rectangle(
-                    x1, y1, x2, y2,
-                    fill=color, outline=GRID_LINE_COLOR, width=1,
-                    tags="cell",
-                )
-
-                txt = _text_color(color)
-                cx, cy = x1 + SZ // 2, y1 + SZ // 2
-                if crop:
-                    icon  = CROP_DATA[crop]["icon"]
-                    n     = CROP_DATA[crop]["plants_per_sqft"]
-                    label = crop if len(crop) <= 10 else crop[:9] + "."
-                    # Emoji icon (top area)
-                    self.canvas.create_text(
-                        cx, cy - 22, text=icon,
-                        font=("Segoe UI Emoji", 14), fill=txt,
+                if surface != "garden":
+                    # Non-garden surface cell
+                    sdata = SURFACE_DATA[surface]
+                    color = sdata["color"]
+                    self.canvas.create_rectangle(
+                        x1, y1, x2, y2,
+                        fill=color, outline="#C0C0C0", width=1,
+                        tags="cell",
                     )
-                    # Crop name (centre)
+                    txt = _text_color(color)
+                    cx, cy = x1 + SZ // 2, y1 + SZ // 2
+                    if sdata["icon"]:
+                        self.canvas.create_text(
+                            cx, cy - 8, text=sdata["icon"],
+                            font=("Segoe UI Emoji", 16), fill=txt,
+                        )
+                    name = surface.capitalize()
                     self.canvas.create_text(
-                        cx, cy - 2, text=label,
-                        font=("Helvetica", 8, "bold"), fill=txt,
-                    )
-                    # Plant count (below centre)
-                    self.canvas.create_text(
-                        cx, cy + 14, text=f"× {n}",
+                        cx, cy + 16, text=name,
                         font=("Helvetica", 8), fill=txt,
                     )
                 else:
-                    self.canvas.create_text(
-                        x1 + 5, y1 + 5, text=f"{r+1},{c+1}",
-                        font=("Helvetica", 6), fill=txt, anchor="nw",
+                    # Garden cell — show crop or empty
+                    crop  = self.grid_data.get((r, c))
+                    color = CROP_DATA[crop]["color"] if crop else EMPTY_COLOR
+                    self.canvas.create_rectangle(
+                        x1, y1, x2, y2,
+                        fill=color, outline=GRID_LINE_COLOR, width=1,
+                        tags="cell",
                     )
+                    txt = _text_color(color)
+                    cx, cy = x1 + SZ // 2, y1 + SZ // 2
+                    if crop:
+                        icon  = CROP_DATA[crop]["icon"]
+                        n     = CROP_DATA[crop]["plants_per_sqft"]
+                        label = crop if len(crop) <= 10 else crop[:9] + "."
+                        self.canvas.create_text(
+                            cx, cy - 22, text=icon,
+                            font=("Segoe UI Emoji", 14), fill=txt,
+                        )
+                        self.canvas.create_text(
+                            cx, cy - 2, text=label,
+                            font=("Helvetica", 8, "bold"), fill=txt,
+                        )
+                        self.canvas.create_text(
+                            cx, cy + 14, text=f"× {n}",
+                            font=("Helvetica", 8), fill=txt,
+                        )
+                    else:
+                        self.canvas.create_text(
+                            x1 + 5, y1 + 5, text=f"{r+1},{c+1}",
+                            font=("Helvetica", 6), fill=txt, anchor="nw",
+                        )
 
-                # Note indicator — top-right corner
-                if (r, c) in self.notes:
-                    self.canvas.create_text(
-                        x2 - 4, y1 + 4, text="📝",
-                        font=("Segoe UI Emoji", 9), fill=txt, anchor="ne",
-                    )
+                    # Note indicator — top-right corner
+                    if (r, c) in self.notes:
+                        self.canvas.create_text(
+                            x2 - 4, y1 + 4, text="📝",
+                            font=("Segoe UI Emoji", 9), fill=txt, anchor="ne",
+                        )
 
-                # Irrigation indicator — bottom-left corner
-                irr_icons  = {"drip": "💧", "spray": "🌧️"}
-                irr = self.irrigation.get((r, c))
-                if irr in irr_icons:
-                    self.canvas.create_text(
-                        x1 + 4, y2 - 4, text=irr_icons[irr],
-                        font=("Segoe UI Emoji", 9), fill=txt, anchor="sw",
-                    )
+                    # Irrigation indicator — bottom-left corner
+                    irr_icons  = {"drip": "💧", "spray": "🌧️"}
+                    irr = self.irrigation.get((r, c))
+                    if irr in irr_icons:
+                        self.canvas.create_text(
+                            x1 + 4, y2 - 4, text=irr_icons[irr],
+                            font=("Segoe UI Emoji", 9), fill=txt, anchor="sw",
+                        )
 
-                # Soil indicator — bottom-right corner
-                soil_icons = {
-                    "composted":        "♻️",
-                    "fertilized":       "⚡",
-                    "needs_compost":    "🟤",
-                    "needs_fertilizer": "⚠️",
-                }
-                soil = self.soil.get((r, c))
-                if soil in soil_icons:
-                    self.canvas.create_text(
-                        x2 - 4, y2 - 4, text=soil_icons[soil],
-                        font=("Segoe UI Emoji", 9), fill=txt, anchor="se",
-                    )
+                    # Soil indicator — bottom-right corner
+                    soil_icons = {
+                        "composted":        "♻️",
+                        "fertilized":       "⚡",
+                        "needs_compost":    "🟤",
+                        "needs_fertilizer": "⚠️",
+                    }
+                    soil = self.soil.get((r, c))
+                    if soil in soil_icons:
+                        self.canvas.create_text(
+                            x2 - 4, y2 - 4, text=soil_icons[soil],
+                            font=("Segoe UI Emoji", 9), fill=txt, anchor="se",
+                        )
+
+        # Raised-bed border: draw thick brown line on edges adjacent to
+        # non-garden cells or grid boundary.
+        BORDER_COLOR = "#3E2107"
+        BORDER_W = 5
+        for r in range(self.rows):
+            for c in range(self.cols):
+                if not self._is_garden(r, c):
+                    continue
+                x1 = PAD + c * SZ
+                y1 = PAD + r * SZ
+                x2 = x1 + SZ
+                y2 = y1 + SZ
+                if not self._is_garden(r - 1, c):  # top
+                    self.canvas.create_line(x1, y1, x2, y1, fill=BORDER_COLOR, width=BORDER_W)
+                if not self._is_garden(r + 1, c):  # bottom
+                    self.canvas.create_line(x1, y2, x2, y2, fill=BORDER_COLOR, width=BORDER_W)
+                if not self._is_garden(r, c - 1):  # left
+                    self.canvas.create_line(x1, y1, x1, y2, fill=BORDER_COLOR, width=BORDER_W)
+                if not self._is_garden(r, c + 1):  # right
+                    self.canvas.create_line(x2, y1, x2, y2, fill=BORDER_COLOR, width=BORDER_W)
 
         # Row numbers (left)
         for r in range(self.rows):
@@ -364,6 +417,8 @@ class GardenPlannerApp:
         cell = self._cell_from_event(event)
         if cell:
             r, c = cell
+            if self.cell_types.get((r, c), "garden") != "garden":
+                return  # can't plant on non-garden surfaces
             self.grid_data[(r, c)] = self.selected_crop.get()
             self._draw_grid()
             self._update_sidebar()
@@ -379,25 +434,56 @@ class GardenPlannerApp:
         if not cell:
             return
         r, c = cell
+        surface = self.cell_types.get((r, c), "garden")
 
         menu = tk.Menu(self.root, tearoff=0)
-        menu.add_command(label="Clear Square", command=lambda: self._clear_square(r, c))
 
-        irr_menu = tk.Menu(menu, tearoff=0)
-        irr_menu.add_command(label="None",     command=lambda: self._set_irrigation(r, c, None))
-        irr_menu.add_command(label="💧 Drip",  command=lambda: self._set_irrigation(r, c, "drip"))
-        irr_menu.add_command(label="🌧️ Spray", command=lambda: self._set_irrigation(r, c, "spray"))
-        menu.add_cascade(label="Set Irrigation", menu=irr_menu)
+        if surface == "garden":
+            menu.add_command(label="Clear Square", command=lambda: self._clear_square(r, c))
 
-        soil_menu = tk.Menu(menu, tearoff=0)
-        soil_menu.add_command(label="None",                command=lambda: self._set_soil(r, c, None))
-        soil_menu.add_command(label="♻️ Composted",        command=lambda: self._set_soil(r, c, "composted"))
-        soil_menu.add_command(label="⚡ Fertilized",       command=lambda: self._set_soil(r, c, "fertilized"))
-        soil_menu.add_command(label="🟤 Needs Compost",   command=lambda: self._set_soil(r, c, "needs_compost"))
-        soil_menu.add_command(label="⚠️ Needs Fertilizer", command=lambda: self._set_soil(r, c, "needs_fertilizer"))
-        menu.add_cascade(label="Set Soil", menu=soil_menu)
+            irr_menu = tk.Menu(menu, tearoff=0)
+            irr_menu.add_command(label="None",     command=lambda: self._set_irrigation(r, c, None))
+            irr_menu.add_command(label="💧 Drip",  command=lambda: self._set_irrigation(r, c, "drip"))
+            irr_menu.add_command(label="🌧️ Spray", command=lambda: self._set_irrigation(r, c, "spray"))
+            menu.add_cascade(label="Set Irrigation", menu=irr_menu)
+
+            soil_menu = tk.Menu(menu, tearoff=0)
+            soil_menu.add_command(label="None",                command=lambda: self._set_soil(r, c, None))
+            soil_menu.add_command(label="♻️ Composted",        command=lambda: self._set_soil(r, c, "composted"))
+            soil_menu.add_command(label="⚡ Fertilized",       command=lambda: self._set_soil(r, c, "fertilized"))
+            soil_menu.add_command(label="🟤 Needs Compost",   command=lambda: self._set_soil(r, c, "needs_compost"))
+            soil_menu.add_command(label="⚠️ Needs Fertilizer", command=lambda: self._set_soil(r, c, "needs_fertilizer"))
+            menu.add_cascade(label="Set Soil", menu=soil_menu)
+
+        menu.add_separator()
+        surf_menu = tk.Menu(menu, tearoff=0)
+        for stype in SURFACE_ORDER:
+            label = stype.capitalize()
+            if stype == surface:
+                label += "  ✓"
+            surf_menu.add_command(
+                label=label,
+                command=lambda s=stype: self._set_surface(r, c, s),
+            )
+        menu.add_cascade(label="Set Surface", menu=surf_menu)
 
         menu.tk_popup(event.x_root, event.y_root)
+
+    def _set_surface(self, r, c, surface):
+        if surface == "garden":
+            self.cell_types.pop((r, c), None)
+            # Ensure grid_data entry exists for this garden cell
+            if (r, c) not in self.grid_data:
+                self.grid_data[(r, c)] = None
+        else:
+            self.cell_types[(r, c)] = surface
+            # Remove crop data for non-garden cells
+            self.grid_data.pop((r, c), None)
+            self.notes.pop((r, c), None)
+            self.irrigation.pop((r, c), None)
+            self.soil.pop((r, c), None)
+        self._draw_grid()
+        self._update_sidebar()
 
     def _clear_square(self, r, c):
         self.grid_data[(r, c)] = None
@@ -426,19 +512,25 @@ class GardenPlannerApp:
 
         if cell:
             r, c = cell
-            crop = self.grid_data.get(cell)
-            if crop:
-                n  = CROP_DATA[crop]["plants_per_sqft"]
-                sp = CROP_DATA[crop]["spacing"]
+            surface = self.cell_types.get((r, c), "garden")
+            if surface != "garden":
                 self.status_var.set(
-                    f"Row {r+1}, Col {c+1}  ·  {crop}  ·  "
-                    f"{n} plant(s)/sqft  ·  Spacing: {sp}"
+                    f"Row {r+1}, Col {c+1}  ·  {surface.capitalize()}"
                 )
             else:
-                self.status_var.set(
-                    f"Row {r+1}, Col {c+1}  ·  Empty  —  "
-                    f"click to plant {self.selected_crop.get()}"
-                )
+                crop = self.grid_data.get(cell)
+                if crop:
+                    n  = CROP_DATA[crop]["plants_per_sqft"]
+                    sp = CROP_DATA[crop]["spacing"]
+                    self.status_var.set(
+                        f"Row {r+1}, Col {c+1}  ·  {crop}  ·  "
+                        f"{n} plant(s)/sqft  ·  Spacing: {sp}"
+                    )
+                else:
+                    self.status_var.set(
+                        f"Row {r+1}, Col {c+1}  ·  Empty  —  "
+                        f"click to plant {self.selected_crop.get()}"
+                    )
         else:
             self.status_var.set("Ready")
 
@@ -505,18 +597,19 @@ class GardenPlannerApp:
                     font=("Helvetica", 8),
                 ).pack(side=tk.RIGHT)
 
-        # Stats footer — total_sq counts only active plantable squares
-        total_sq   = len(self.grid_data)
+        # Stats footer — garden_sq counts only garden-type cells
+        total_grid = self.rows * self.cols
+        garden_sq  = len(self.grid_data)
         planted_sq = sum(1 for v in self.grid_data.values() if v)
         total_pl   = sum(
             CROP_DATA[v]["plants_per_sqft"]
             for v in self.grid_data.values() if v
         )
-        pct = int(100 * planted_sq / total_sq) if total_sq else 0
+        pct = int(100 * planted_sq / garden_sq) if garden_sq else 0
         self.stats_lbl.configure(
             text=(
-                f"Bed: {self.rows} × {self.cols}  ({total_sq} sqft)\n"
-                f"Planted: {planted_sq}/{total_sq} squares  ({pct}%)\n"
+                f"Garden: {garden_sq} sqft  ·  Total grid: {total_grid} cells\n"
+                f"Planted: {planted_sq}/{garden_sq} squares  ({pct}%)\n"
                 f"Total plants: {total_pl}"
             )
         )
@@ -530,6 +623,7 @@ class GardenPlannerApp:
         ):
             self.current_file = None
             self.rows, self.cols = 4, 8
+            self.cell_types = {}
             self.notes      = {}
             self.irrigation = {}
             self.soil       = {}
@@ -539,24 +633,26 @@ class GardenPlannerApp:
             self.root.title("Square Foot Garden Planner")
 
     def _resize_garden(self):
-        dlg = _ResizeDialog(self.root, self.rows, self.cols)
+        dlg = _LayoutDialog(self.root, self.rows, self.cols, self.cell_types)
         self.root.wait_window(dlg.top)
         if dlg.result:
-            nr, nc = dlg.result
+            nr, nc, new_types = dlg.result
             old = self.grid_data.copy()
             self.rows, self.cols = nr, nc
+            self.cell_types = new_types
             self._init_grid()
             for (r, c), crop in old.items():
                 if r < nr and c < nc and crop:
-                    self.grid_data[(r, c)] = crop
-            self.notes      = {(r, c): v for (r, c), v in self.notes.items()      if r < nr and c < nc}
-            self.irrigation = {(r, c): v for (r, c), v in self.irrigation.items() if r < nr and c < nc}
-            self.soil       = {(r, c): v for (r, c), v in self.soil.items()       if r < nr and c < nc}
+                    if self.cell_types.get((r, c), "garden") == "garden":
+                        self.grid_data[(r, c)] = crop
+            self.notes      = {(r, c): v for (r, c), v in self.notes.items()      if r < nr and c < nc and self.cell_types.get((r, c), "garden") == "garden"}
+            self.irrigation = {(r, c): v for (r, c), v in self.irrigation.items() if r < nr and c < nc and self.cell_types.get((r, c), "garden") == "garden"}
+            self.soil       = {(r, c): v for (r, c), v in self.soil.items()       if r < nr and c < nc and self.cell_types.get((r, c), "garden") == "garden"}
             self._draw_grid()
             self._update_sidebar()
 
     def _clear_all(self):
-        if messagebox.askyesno("Clear All", "Remove all crops from the garden?"):
+        if messagebox.askyesno("Clear All", "Remove all crops from the garden?\n(Layout shape will be kept.)"):
             for key in self.grid_data:
                 self.grid_data[key] = None
             self.notes      = {}
@@ -592,6 +688,7 @@ class GardenPlannerApp:
                 for (r, c), crop in self.grid_data.items()
                 if crop
             },
+            "cell_types": {f"{r},{c}": val  for (r, c), val  in self.cell_types.items()},
             "notes":      {f"{r},{c}": note for (r, c), note in self.notes.items()},
             "irrigation": {f"{r},{c}": val  for (r, c), val  in self.irrigation.items()},
             "soil":       {f"{r},{c}": val  for (r, c), val  in self.soil.items()},
@@ -616,6 +713,11 @@ class GardenPlannerApp:
                 data = json.load(f)
             self.rows = int(data["rows"])
             self.cols = int(data["cols"])
+            self.cell_types = {}
+            for key, val in data.get("cell_types", {}).items():
+                r, c = map(int, key.split(","))
+                if 0 <= r < self.rows and 0 <= c < self.cols and val in SURFACE_DATA:
+                    self.cell_types[(r, c)] = val
             self._init_grid()
             for key, crop in data.get("grid", {}).items():
                 r, c = map(int, key.split(","))
@@ -696,53 +798,161 @@ class _NoteDialog:
         self.top.destroy()
 
 
-# ─── Resize Dialog ────────────────────────────────────────────────────────────
+# ─── Layout Dialog ────────────────────────────────────────────────────────────
 
-class _ResizeDialog:
-    def __init__(self, parent, rows, cols):
+class _LayoutDialog:
+    MINI_SZ = 28  # pixels per cell in the mini canvas
+
+    def __init__(self, parent, rows, cols, cell_types):
         self.result = None
+        self._rows = rows
+        self._cols = cols
+        # Work on a copy so Cancel discards changes
+        self._cell_types = dict(cell_types)
 
         self.top = tk.Toplevel(parent)
-        self.top.title("Resize Garden Bed")
+        self.top.title("Edit Garden Layout")
         self.top.resizable(False, False)
         self.top.grab_set()
         self.top.configure(bg="#2D5016")
 
         tk.Label(
-            self.top, text="Resize Garden Bed",
+            self.top, text="Edit Garden Layout",
             font=("Georgia", 13, "bold"),
             bg="#2D5016", fg="#F5F5DC",
-        ).grid(row=0, column=0, columnspan=2, pady=(16, 12), padx=24)
+        ).pack(pady=(16, 8), padx=24)
+
+        # ── Dimension spinners ───────────────────────────────────────────
+        dim_frame = tk.Frame(self.top, bg="#2D5016")
+        dim_frame.pack(padx=24, pady=4)
 
         fields = [
-            ("Rows (depth / length):", "rows_var", rows),
-            ("Columns (width):",       "cols_var", cols),
+            ("Rows:", "rows_var", rows),
+            ("Cols:", "cols_var", cols),
         ]
-        for i, (label, attr, default) in enumerate(fields):
+        for label, attr, default in fields:
             tk.Label(
-                self.top, text=label, bg="#2D5016", fg="#F5F5DC",
+                dim_frame, text=label, bg="#2D5016", fg="#F5F5DC",
                 font=("Helvetica", 10),
-            ).grid(row=i + 1, column=0, sticky="e", padx=12, pady=6)
-
+            ).pack(side=tk.LEFT, padx=(0, 4))
             var = tk.IntVar(value=default)
             setattr(self, attr, var)
-            ttk.Spinbox(self.top, from_=1, to=20, textvariable=var, width=8
-                        ).grid(row=i + 1, column=1, padx=12, pady=6, sticky="w")
+            sp = ttk.Spinbox(dim_frame, from_=1, to=20, textvariable=var, width=5)
+            sp.pack(side=tk.LEFT, padx=(0, 12))
+
+        ttk.Button(dim_frame, text="Update Grid", command=self._rebuild_canvas).pack(side=tk.LEFT, padx=6)
+
+        # ── Mini canvas ──────────────────────────────────────────────────
+        self._canvas_frame = tk.Frame(self.top, bg="#2D5016")
+        self._canvas_frame.pack(padx=24, pady=8)
+
+        self.mini_canvas = None
+        self._build_mini_canvas()
+
+        # ── Legend strip ─────────────────────────────────────────────────
+        leg = tk.Frame(self.top, bg="#2D5016")
+        leg.pack(padx=24, pady=(0, 4))
+        for stype in SURFACE_ORDER:
+            sdata = SURFACE_DATA[stype]
+            color = sdata["color"] if sdata["color"] else EMPTY_COLOR
+            f = tk.Frame(leg, bg="#2D5016")
+            f.pack(side=tk.LEFT, padx=4)
+            tk.Label(f, width=2, bg=color, relief="solid", bd=1).pack(side=tk.LEFT, padx=(0, 2))
+            tk.Label(f, text=stype.capitalize(), bg="#2D5016", fg="#F5F5DC",
+                     font=("Helvetica", 8)).pack(side=tk.LEFT)
 
         tk.Label(
             self.top,
-            text="Crops outside the new boundary will be removed.",
+            text="Left-click = Garden  ·  Right-click = cycle surface type",
             bg="#2D5016", fg="#81C784",
             font=("Helvetica", 8, "italic"),
-        ).grid(row=3, column=0, columnspan=2, pady=(2, 4))
+        ).pack(pady=(0, 4))
 
+        # ── Buttons ──────────────────────────────────────────────────────
         btns = tk.Frame(self.top, bg="#2D5016")
-        btns.grid(row=4, column=0, columnspan=2, pady=14)
-        ttk.Button(btns, text="Apply",  command=self._apply   ).pack(side=tk.LEFT, padx=6)
+        btns.pack(pady=(4, 14))
+        ttk.Button(btns, text="Apply",  command=self._apply).pack(side=tk.LEFT, padx=6)
         ttk.Button(btns, text="Cancel", command=self.top.destroy).pack(side=tk.LEFT, padx=6)
 
+    def _build_mini_canvas(self):
+        if self.mini_canvas:
+            self.mini_canvas.destroy()
+        SZ = self.MINI_SZ
+        w = self._cols * SZ + 2
+        h = self._rows * SZ + 2
+        self.mini_canvas = tk.Canvas(
+            self._canvas_frame, width=w, height=h,
+            bg="#6B4C2A", highlightthickness=1, highlightbackground="#3A7D44",
+        )
+        self.mini_canvas.pack()
+        self.mini_canvas.bind("<Button-1>", self._mini_left_click)
+        self.mini_canvas.bind("<Button-3>", self._mini_right_click)
+        self._draw_mini()
+
+    def _draw_mini(self):
+        self.mini_canvas.delete("all")
+        SZ = self.MINI_SZ
+        for r in range(self._rows):
+            for c in range(self._cols):
+                surface = self._cell_types.get((r, c), "garden")
+                sdata = SURFACE_DATA[surface]
+                color = sdata["color"] if sdata["color"] else EMPTY_COLOR
+                x1 = 1 + c * SZ
+                y1 = 1 + r * SZ
+                x2 = x1 + SZ
+                y2 = y1 + SZ
+                outline = GRID_LINE_COLOR if surface == "garden" else "#C0C0C0"
+                self.mini_canvas.create_rectangle(
+                    x1, y1, x2, y2,
+                    fill=color, outline=outline, width=1,
+                )
+                if sdata["icon"]:
+                    self.mini_canvas.create_text(
+                        x1 + SZ // 2, y1 + SZ // 2,
+                        text=sdata["icon"], font=("Segoe UI Emoji", 8),
+                    )
+
+    def _mini_cell(self, event):
+        SZ = self.MINI_SZ
+        c = int((event.x - 1) // SZ)
+        r = int((event.y - 1) // SZ)
+        if 0 <= r < self._rows and 0 <= c < self._cols:
+            return r, c
+        return None
+
+    def _mini_left_click(self, event):
+        cell = self._mini_cell(event)
+        if cell:
+            self._cell_types.pop(cell, None)  # set to garden
+            self._draw_mini()
+
+    def _mini_right_click(self, event):
+        cell = self._mini_cell(event)
+        if not cell:
+            return
+        current = self._cell_types.get(cell, "garden")
+        idx = SURFACE_ORDER.index(current)
+        next_surface = SURFACE_ORDER[(idx + 1) % len(SURFACE_ORDER)]
+        if next_surface == "garden":
+            self._cell_types.pop(cell, None)
+        else:
+            self._cell_types[cell] = next_surface
+        self._draw_mini()
+
+    def _rebuild_canvas(self):
+        nr = self.rows_var.get()
+        nc = self.cols_var.get()
+        # Prune cell_types outside new bounds
+        self._cell_types = {
+            (r, c): v for (r, c), v in self._cell_types.items()
+            if r < nr and c < nc
+        }
+        self._rows = nr
+        self._cols = nc
+        self._build_mini_canvas()
+
     def _apply(self):
-        self.result = (self.rows_var.get(), self.cols_var.get())
+        self.result = (self.rows_var.get(), self.cols_var.get(), dict(self._cell_types))
         self.top.destroy()
 
 

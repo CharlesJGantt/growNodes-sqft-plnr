@@ -1,6 +1,6 @@
 # growNodes Square-Foot Garden Planner
 
-**By Charles Gantt · The Makers Workbench · v1.1**
+**By Charles Gantt · The Makers Workbench · v1.2**
 
 A lightweight, no-fuss desktop app for planning raised-bed vegetable gardens using the square-foot gardening method. Pick your crops, click to plant them on a visual grid, and instantly see how many plants fit in your bed — no spreadsheet required.
 
@@ -9,27 +9,30 @@ A lightweight, no-fuss desktop app for planning raised-bed vegetable gardens usi
 ## Features
 
 - **Visual grid-based garden layout** — each cell represents one square foot of your raised bed
+- **7 surface types** — mark any cell as Garden, 🌱 Grass, 🧱 Pathway, ⬡ Gravel, 🪵 Mulch, 💧 Water, or Unused; only garden cells accept crops. Non-garden cells display their surface icon and color, and automatic raised-bed borders are drawn along the boundary between garden and non-garden cells.
+- **Visual layout editor** — go to **Garden → Edit Garden Layout** to open a mini-canvas preview of your bed. Adjust rows and columns with spinners, then left-click any cell to set it to Garden or right-click to cycle through surface types. A color-coded legend shows all available surfaces. Click **Apply** to commit changes.
 - **33 built-in crops** with scientifically-based planting density and spacing data:
   - Tomatoes, Peppers, Lettuce, Spinach, Carrots, Radishes, Beans, Basil, Cucumbers, Zucchini, Kale, Onions, Peas, Broccoli, Cauliflower, Cabbage, Brussels Sprouts, Sweet Corn, Pumpkin, Watermelon, Cantaloupe, Eggplant, Sweet Potatoes, Garlic, Leeks, Beets, Swiss Chard, Arugula, Cilantro, Parsley, Dill, Sunflowers, Strawberries
 - **Emoji crop icons** — each crop displays a relevant emoji icon inside its cell for quick visual identification
 - **Smart text contrast** — crop labels and all in-cell overlays automatically switch between black and white text based on the cell's background color, so every label stays readable regardless of crop color
 - **Left-click to plant, double-click to add a note, right-click for options** — intuitive point-and-click editing
 - **Per-square notes** — double-click any square to attach a typed note; squares with a note show a 📝 indicator in the top-right corner
-- **Right-click context menu** with three sections:
-  - **Clear Square** — removes the crop from that cell
-  - **Set Irrigation** — tag the square as None, 💧 Drip, or 🌧️ Spray; the icon appears in the bottom-left corner
-  - **Set Soil** — tag the square as None, ♻️ Composted, ⚡ Fertilized, 🟤 Needs Compost, or ⚠️ Needs Fertilizer; the icon appears in the bottom-right corner
-- **Hover tooltips** — hover over any cell to see the crop name, plants-per-sqft, and recommended spacing in the status bar
+- **Right-click context menu** with four sections:
+  - **Clear Square** — removes the crop from that cell (garden cells only)
+  - **Set Irrigation** — tag the square as None, 💧 Drip, or 🌧️ Spray; the icon appears in the bottom-left corner (garden cells only)
+  - **Set Soil** — tag the square as None, ♻️ Composted, ⚡ Fertilized, 🟤 Needs Compost, or ⚠️ Needs Fertilizer; the icon appears in the bottom-right corner (garden cells only)
+  - **Set Surface** — change any individual cell's surface type without opening the full layout editor
+- **Hover tooltips** — hover over any cell to see the crop name, plants-per-sqft, and recommended spacing in the status bar; non-garden cells show their surface type
 - **Color-coded cells** — every crop has its own distinct color so your layout is easy to read at a glance
 - **Crop legend** — sidebar panel shows all available crops with their color swatch and plants-per-sqft count
 - **Live planted summary** — sidebar updates in real time showing how many squares and total plants you've committed to each crop
-- **Bed statistics** — running totals for bed size, squares planted, percentage filled, and total plant count
-- **Resizable garden bed** — set rows and columns anywhere from 1×1 up to 20×20; existing crops, notes, irrigation, and soil tags within the new boundary are all preserved
+- **Bed statistics** — running totals for garden square feet, total grid cells, squares planted, percentage filled, and total plant count
+- **Resizable garden bed** — set rows and columns anywhere from 1×1 up to 20×20 via the layout editor; existing crops, notes, irrigation, and soil tags within the new boundary are all preserved
 - **Scrollable canvas** — works comfortably with large garden beds that exceed your screen size
-- **Save & load layouts** — layouts are saved as plain `.json` files that include your crops, notes, irrigation tags, and soil tags; easy to back up, share, or version-control
+- **Save & load layouts** — layouts are saved as plain `.json` files that include your crops, surface types, notes, irrigation tags, and soil tags; easy to back up, share, or version-control
 - **Save / Save As / Open** — full file workflow with keyboard shortcuts (Ctrl+N, Ctrl+O, Ctrl+S)
 - **New Garden** — quickly reset to a blank 4×8 default bed
-- **Clear All** — wipe every cell at once with a single confirmation prompt
+- **Clear All** — wipe every crop at once with a single confirmation prompt (layout shape is preserved)
 
 ---
 
@@ -71,7 +74,9 @@ That's it. No virtual environment, no `pip install`, no setup step.
 
 When the app opens you'll see a default **4 × 8 bed** (4 rows deep, 8 columns wide = 32 square feet). That's a common raised-bed size, but you can change it any time.
 
-To resize your bed, go to **Garden → Resize Garden Bed** and enter the number of rows and columns you want (up to 20 × 20). Any crops, notes, and tags that fall outside the new boundary will be removed; everything inside is kept.
+To edit your layout, go to **Garden → Edit Garden Layout**. A dialog opens with a mini-canvas preview of your bed. Use the **Rows** and **Cols** spinners to change the grid size, then click **Update Grid** to see the new dimensions. Left-click any cell to make it a garden square, or right-click to cycle through surface types (grass, pathway, gravel, mulch, water, unused). Click **Apply** to commit changes. Any crops, notes, and tags that fall outside the new boundary or on non-garden cells will be removed; everything else is kept.
+
+You can also change a single cell's surface type on the main canvas by right-clicking it and choosing **Set Surface**.
 
 To start completely fresh, use **File → New Garden** (or Ctrl+N).
 
@@ -91,9 +96,10 @@ The sidebar updates live as you plant, showing a breakdown of squares and total 
 
 **Right-click** any square to open the context menu:
 
-- **Clear Square** — removes the crop from that cell.
-- **Set Irrigation** — choose None, 💧 Drip, or 🌧️ Spray. The selected icon appears in the **bottom-left** corner of the cell.
-- **Set Soil** — choose None, ♻️ Composted, ⚡ Fertilized, 🟤 Needs Compost, or ⚠️ Needs Fertilizer. The selected icon appears in the **bottom-right** corner of the cell.
+- **Clear Square** — removes the crop from that cell (garden cells only).
+- **Set Irrigation** — choose None, 💧 Drip, or 🌧️ Spray. The selected icon appears in the **bottom-left** corner of the cell (garden cells only).
+- **Set Soil** — choose None, ♻️ Composted, ⚡ Fertilized, 🟤 Needs Compost, or ⚠️ Needs Fertilizer. The selected icon appears in the **bottom-right** corner of the cell (garden cells only).
+- **Set Surface** — change the cell's surface type to Garden, Grass, Pathway, Gravel, Mulch, Water, or Unused. The current surface is marked with a ✓. Changing a garden cell to a non-garden surface removes its crop, notes, and tags.
 
 These tags are saved with your layout and are fully independent of the crop planted in that square.
 
@@ -103,11 +109,19 @@ These tags are saved with your layout and are fully independent of the crop plan
 - **File → Save As** — always prompts for a file name and location.
 - **File → Open** (Ctrl+O) — loads a previously saved `.json` layout file.
 
-Layout files are plain JSON and include your crops, notes, irrigation tags, and soil tags, so everything is preserved between sessions.
+Layout files are plain JSON and include your crops, surface types, notes, irrigation tags, and soil tags, so everything is preserved between sessions.
 
 ---
 
 ## Changelog
+
+### v1.2
+- **Surface types** — cells can now be set to Garden, Grass, Pathway, Gravel, Mulch, Water, or Unused; only garden cells accept crops
+- **Visual layout editor** — Garden → Edit Garden Layout opens a mini-canvas preview where you can resize the grid and paint surface types with left/right-click
+- **Set Surface context menu** — right-click any cell on the main canvas to change its surface type without opening the layout editor
+- **Raised-bed borders** — thick brown borders automatically drawn along the boundary between garden and non-garden cells
+- **Updated bed statistics** — sidebar now shows garden square feet vs total grid cells
+- Surface types are saved to and loaded from layout JSON files
 
 ### v1.1
 - Expanded crop database from 13 to 33 crops — added Broccoli, Cauliflower, Cabbage, Brussels Sprouts, Sweet Corn, Pumpkin, Watermelon, Cantaloupe, Eggplant, Sweet Potatoes, Garlic, Leeks, Beets, Swiss Chard, Arugula, Cilantro, Parsley, Dill, Sunflowers, and Strawberries
